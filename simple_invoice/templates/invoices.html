@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الفواتير السابقة</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding-top: 50px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-right">الفواتير السابقة</h1>
+        <hr>
+        <a href="{{ url_for('index') }}" class="btn btn-primary mb-3">العودة للصفحة الرئيسية</a>
+        <table class="table table-bordered table-striped text-right">
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>اسم العميل</th>
+                    <th>تاريخ الفاتورة</th>
+                    <th>الإجمالي النهائي</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td>{{ invoice.invoice_number }}</td>
+                    <td>{{ invoice.client_name }}</td>
+                    <td>{{ invoice.invoice_date }}</td>
+                    <td>{{ "%.2f"|format(invoice.total_with_tax) }}</td>
+                    <td>
+                        <a href="{{ url_for('generate_pdf', invoice_id=invoice.invoice_number) }}" class="btn btn-info btn-sm">عرض الفاتورة</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">لا توجد فواتير سابقة.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>فاتورة ضريبية</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1cm;
+        }
+
+        @font-face {
+            font-family: 'Tajawal';
+            src: url('Tajawal-Regular.ttf');
+            font-weight: normal;
+            -fs-pdf-font-embed: embed;
+            -fs-pdf-font-encoding: UTF-8;
+        }
+        @font-face {
+            font-family: 'Tajawal';
+            src: url('Tajawal-Bold.ttf');
+            font-weight: bold;
+            -fs-pdf-font-embed: embed;
+            -fs-pdf-font-encoding: UTF-8;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            direction: rtl;
+            text-align: right;
+            padding: 20px;
+        }
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .client-info, .merchant-info {
+            width: 48%;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .invoice-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .invoice-number {
+            text-align: center;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total-summary {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .total-summary p {
+            margin: 5px 0;
+        }
+        .total-summary h3 {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-header">
+        <h1 class="invoice-title">فاتورة ضريبية</h1>
+        <p class="invoice-number">رقم الفاتورة: {{ invoice.invoice_number }}</p>
+        <p>التاريخ: {{ invoice.invoice_date }}</p>
+    </div>
+
+    <div class="invoice-details">
+        <div class="merchant-info">
+            <h3>معلومات التاجر</h3>
+            <p><strong>اسم التاجر:</strong> {{ invoice.merchant_name }}</p>
+            <p><strong>الرقم الضريبي:</strong> {{ invoice.merchant_tax_id }}</p>
+            <p><strong>العنوان:</strong> {{ invoice.merchant_address }}</p>
+        </div>
+        <div class="client-info">
+            <h3>معلومات العميل</h3>
+            <p><strong>اسم العميل:</strong> {{ invoice.client_name }}</p>
+            <p><strong>الرقم الضريبي:</strong> {{ invoice.client_tax_id }}</p>
+            <p><strong>العنوان:</strong> {{ invoice.client_address }}</p>
+        </div>
+    </div>
+
+    <h3>بنود الفاتورة</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>اسم المنتج</th>
+                <th>الكمية</th>
+                <th>السعر</th>
+                <th>الإجمالي</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ "%.2f"|format(item.quantity) }}</td>
+                <td>{{ "%.2f"|format(item.unit_price) }}</td>
+                <td>{{ "%.2f"|format(item.item_total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="total-summary">
+        <p>الإجمالي (غير شامل الضريبة): {{ "%.2f"|format(invoice.total_before_tax) }}</p>
+        <p>قيمة الضريبة (15%): {{ "%.2f"|format(invoice.tax_amount) }}</p>
+        <h3>الإجمالي (شامل الضريبة): {{ "%.2f"|format(invoice.total_with_tax) }}</h3>
+    </div>
+</body>
+</html>

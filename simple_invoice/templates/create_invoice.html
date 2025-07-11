@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إنشاء فاتورة</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <style>
+        body {
+            padding-top: 50px;
+        }
+        .form-row {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-right">إنشاء فاتورة ضريبية</h1>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary mb-3">العودة</a>
+        <hr>
+        <form id="invoice-form" class="text-right">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>معلومات التاجر</h3>
+                    <div class="form-group">
+                        <label for="merchant_name">اسم التاجر</label>
+                        <input type="text" class="form-control" id="merchant_name" name="merchant_name" value="{{ default_data.merchant_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="merchant_tax_id">الرقم الضريبي</label>
+                        <input type="text" class="form-control" id="merchant_tax_id" name="merchant_tax_id" value="{{ default_data.merchant_tax_id }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="merchant_address">العنوان</label>
+                        <input type="text" class="form-control" id="merchant_address" name="merchant_address" value="{{ default_data.merchant_address }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h3>معلومات العميل</h3>
+                    <div class="form-group">
+                        <label for="client_name">اسم العميل</label>
+                        <input type="text" class="form-control" id="client_name" name="client_name" value="{{ default_data.client_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="client_tax_id">الرقم الضريبي</label>
+                        <input type="text" class="form-control" id="client_tax_id" name="client_tax_id" value="{{ default_data.client_tax_id }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="client_address">العنوان</label>
+                        <input type="text" class="form-control" id="client_address" name="client_address" value="{{ default_data.client_address }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-4">بنود الفاتورة</h3>
+            <div class="form-group">
+                <label for="invoice_date">التاريخ</label>
+                <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ today }}" required>
+            </div>
+            
+            <table class="table table-bordered table-striped text-right">
+                <thead>
+                    <tr>
+                        <th>اسم المنتج</th>
+                        <th>الكمية</th>
+                        <th>السعر</th>
+                        <th>الإجمالي</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="invoice-items-table">
+                    <tr>
+                        <td><input type="text" class="form-control" name="product_name[]" required></td>
+                        <td><input type="number" class="form-control quantity" name="quantity[]" min="1" step="0.01" required></td>
+                        <td><input type="number" class="form-control price" name="price[]" min="0" step="0.01" required></td>
+                        <td><input type="text" class="form-control total-item" readonly></td>
+                        <td><button type="button" class="btn btn-danger btn-sm remove-item">حذف</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-success" id="add-item-btn">+ إضافة منتج</button>
+
+            <div class="text-left mt-4">
+                <p>الإجمالي (غير شامل الضريبة): <span id="grand_total">0.00</span></p>
+                <p>قيمة الضريبة (15%): <span id="tax_amount">0.00</span></p>
+                <h3>الإجمالي (شامل الضريبة): <span id="grand_total_with_tax">0.00</span></h3>
+            </div>
+            
+            <hr>
+            <button type="button" class="btn btn-primary" id="save-invoice-btn">حفظ الفاتورة</button>
+            <button type="button" class="btn btn-info" id="print-btn">طباعة</button>
+        </form>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            var taxRate = 0.15;
+            
+            function calculateTotals() {
+                var grand_total = 0;
+                $('#invoice-items-table tr').each(function() {
+                    var quantity = parseFloat($(this).find('.quantity').val()) || 0;
+                    var price = parseFloat($(this).find('.price').val()) || 0;
+                    var item_total = quantity * price;
+                    $(this).find('.total-item').val(item_total.toFixed(2));
+                    grand_total += item_total;
+                });
+                
+                var tax_amount = grand_total * taxRate;
+                var grand_total_with_tax = grand_total + tax_amount;
+                
+                $('#grand_total').text(grand_total.toFixed(2));
+                $('#tax_amount').text(tax_amount.toFixed(2));
+                $('#grand_total_with_tax').text(grand_total_with_tax.toFixed(2));
+            }
+            
+            $('#invoice-items-table').on('input', '.quantity, .price', calculateTotals);
+            
+            $('#add-item-btn').click(function() {
+                var newRow = '<tr>' +
+                    '<td><input type="text" class="form-control" name="product_name[]" required></td>' +
+                    '<td><input type="number" class="form-control quantity" name="quantity[]" min="1" step="0.01" required></td>' +
+                    '<td><input type="number" class="form-control price" name="price[]" min="0" step="0.01" required></td>' +
+                    '<td><input type="text" class="form-control total-item" readonly></td>' +
+                    '<td><button type="button" class="btn btn-danger btn-sm remove-item">حذف</button></td>' +
+                    '</tr>';
+                $('#invoice-items-table').append(newRow);
+                calculateTotals();
+            });
+
+            $('#invoice-items-table').on('click', '.remove-item', function() {
+                $(this).closest('tr').remove();
+                calculateTotals();
+            });
+            
+            $('#save-invoice-btn').click(function() {
+                var invoice_data = {
+                    client_name: $('#client_name').val(),
+                    client_tax_id: $('#client_tax_id').val(),
+                    client_address: $('#client_address').val(),
+                    merchant_name: $('#merchant_name').val(),
+                    merchant_tax_id: $('#merchant_tax_id').val(),
+                    merchant_address: $('#merchant_address').val(),
+                    invoice_date: $('#invoice_date').val(),
+                    grand_total: parseFloat($('#grand_total').text()),
+                    tax_amount: parseFloat($('#tax_amount').text()),
+                    grand_total_with_tax: parseFloat($('#grand_total_with_tax').text()),
+                    items: []
+                };
+                
+                $('#invoice-items-table tr').each(function() {
+                    var item = {
+                        product_name: $(this).find('input[name="product_name[]"]').val(),
+                        quantity: parseFloat($(this).find('.quantity').val()),
+                        price: parseFloat($(this).find('.price').val()),
+                        total: parseFloat($(this).find('.total-item').val())
+                    };
+                    invoice_data.items.push(item);
+                });
+                
+                $.ajax({
+                    url: '/save_invoice',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(invoice_data),
+                    success: function(response) {
+                        if(response.success) {
+                            alert('تم حفظ الفاتورة بنجاح!');
+                            // optional: redirect to a new page or clear the form
+                            window.location.href = "{{ url_for('invoices') }}";
+                        } else {
+                            alert('فشل حفظ الفاتورة: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('حدث خطأ أثناء الاتصال بالخادم.');
+                    }
+                });
+            });
+
+            $('#print-btn').click(function() {
+                window.print();
+            });
+
+            calculateTotals();
+        });
+    </script>
+</body>
+</html>

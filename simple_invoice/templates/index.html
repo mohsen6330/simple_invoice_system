@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>نظام الفواتير</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h1 class="text-center">نظام الفواتير البسيط</h1>
+        <hr>
+        <div class="d-grid gap-2 col-6 mx-auto">
+            <a href="/create_invoice" class="btn btn-primary">انشاء فاتورة جديدة</a>
+            <a href="{{ url_for('invoices') }}" class="btn btn-secondary">عرض الفواتير السابقة</a>
+        </div>
+    </div>
+</body>
+</html>
